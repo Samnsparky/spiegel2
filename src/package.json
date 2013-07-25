@@ -1,6 +1,6 @@
 {
-  "name": "Switchboard",
-  "description": "LabJack Desktop Utilities",
+  "name": "Spiegel2",
+  "description": "d3-based visualization wizard",
   "version": "0.1.0",
   "main": "index.html",
   "window": {
