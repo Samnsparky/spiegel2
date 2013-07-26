@@ -1,11 +1,11 @@
 {
-  "name": "Spiegel2",
+  "name": "spiegel2",
   "description": "d3-based visualization wizard",
   "version": "0.1.0",
   "main": "index.html",
   "window": {
-    "toolbar": false,
-    "width": 700,
+    "toolbar": true,
+    "width": 800,
     "height": 500
   }
 }

@@ -156,7 +156,7 @@ exports.getStepInfo = function(name, onSuccess, onError)
  *      is loaded. Should take one argument: an Array of Object with step
  *      information.
 **/
-exports.getLoadedStepsInfo = function(onError, onSuccess)
+exports.getLoadedStepsInfo = function(onSuccess, onError)
 {
     var stepDir = path.join(exports.getParentDir(), STEPS_DIR);
     var stepsDescriptorSrc = path.join(stepDir, STEPS_DESC_FILENAME);

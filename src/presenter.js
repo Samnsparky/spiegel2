@@ -33,9 +33,11 @@ var STEP_HOLDER = '#content-holder';
  *      Array should have steps in the order in which the user will complete
  *      them.
 **/
-exports.StepManager = function(stepInfo)
+function StepManager(stepInfo)
 {
     this.currentStep = 0;
+
+    this.stepInfo = stepInfo;
 
     /**
      * Indicate that the user has moved to the next step.
@@ -152,7 +154,7 @@ exports.StepManager = function(stepInfo)
         return this.currentStep >= 0 && this.currentStep < stepInfo.length;
     };
 
-};
+}
 var stepManager = null;
 
 
@@ -164,7 +166,7 @@ var stepManager = null;
  * @param {function} onError Function to call if an error is enountered while
  *      loading the step manager.
 **/
-exports.getStepManager = function(onSuccess, onError)
+function getStepManager(onSuccess, onError)
 {
     if(stepManager === null)
     {
@@ -177,7 +179,7 @@ exports.getStepManager = function(onSuccess, onError)
     {
         onSuccess(stepManager);
     }
-};
+}
 
 
 /**
@@ -189,7 +191,7 @@ exports.getStepManager = function(onSuccess, onError)
  * @param {function} onError The function to call if an error is encountered
  *      during rendering.
 **/
-exports.renderNextStep = function(context, onSuccess, onError)
+function renderNextStep(context, onSuccess, onError)
 {
     var onGetCurrentStep = function(currentStep)
     {
@@ -210,7 +212,38 @@ exports.renderNextStep = function(context, onSuccess, onError)
     };
 
     exports.getStepManager(onGetStepManager, onError);
-};
+}
+
+
+/**
+ * Render the current step in the wizard.
+ *
+ * @param {Object} context Object to render the step's handlebars template with.
+ * @param {function} onSuccess The function to call after the step is
+ *      successfully rendered. Should take no arguments and may be null.
+ * @param {function} onError The function to call if an error is encountered
+ *      during rendering.
+**/
+function renderCurrentStep(context, onSuccess, onError)
+{
+    var onGetCurrentStep = function(currentStep)
+    {
+        if(currentStep === null)
+        {
+            var msg = 'Could not retrieve step information.';
+            onError(new Error(msg));
+        }
+
+        exports.renderStep(currentStep, context, onSuccess, onError);
+    };
+
+    var onGetStepManager = function(stepManager)
+    {
+        stepManager.getCurrentStep(onGetCurrentStep, onError);
+    };
+
+    exports.getStepManager(onGetStepManager, onError);
+}
 
 
 /**
@@ -226,7 +259,7 @@ exports.renderNextStep = function(context, onSuccess, onError)
  * @param {function} onError The function to call if an error is encountered
  *      while rendering the step.
 **/
-exports.renderStep = function(step, context, onSuccess, onError)
+function renderStep(step, context, onSuccess, onError)
 {
     var name = step.name;
     var view = name + OS_INDEP_SEP + step.view;
@@ -241,7 +274,7 @@ exports.renderStep = function(step, context, onSuccess, onError)
     });
     
     renderTemplate(view, context, dest, cssFiles, jsFiles, onSuccess, onError);
-};
+}
 
 
 /**
@@ -249,10 +282,10 @@ exports.renderStep = function(step, context, onSuccess, onError)
  *
  * @param {Error} error The error to re-throw.
 **/
-exports.genericErrorHandler = function(error)
+function genericErrorHandler(error)
 {
     throw error;
-};
+}
 
 
 /**
@@ -338,4 +371,25 @@ function renderTemplate(name, context, dest, cssFiles, jsFiles, onSuc, onErr)
     }
     
     fs_facade.renderTemplate(fileLoc, context, onErr, onRender);
+}
+
+
+if(typeof window === 'undefined')
+{
+    exports.StepManager = StepManager;
+    exports.getStepManager = getStepManager;
+    exports.renderNextStep = renderNextStep;
+    exports.renderCurrentStep = renderCurrentStep;
+    exports.renderStep = renderStep;
+    exports.genericErrorHandler  = genericErrorHandler;
+}
+else
+{
+    exports = {};
+    exports.StepManager = StepManager;
+    exports.getStepManager = getStepManager;
+    exports.renderNextStep = renderNextStep;
+    exports.renderCurrentStep = renderCurrentStep;
+    exports.renderStep = renderStep;
+    exports.genericErrorHandler  = genericErrorHandler;
 }

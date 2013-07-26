@@ -2,5 +2,5 @@
     "name": "home",
     "view": "home.html",
     "styles": ["home.css"],
-    "scripts": ["home.js"]
+    "scripts": []
 }

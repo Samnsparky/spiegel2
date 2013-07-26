@@ -1,0 +1,26 @@
+#home-container
+{
+    margin: 20px;
+}
+
+#home-button-holder
+{
+    margin: 80px 0 0 40px;
+}
+
+#home-button-holder .button
+{
+    padding: 30px;
+    font-size: 24px;
+    background-color: #EEEEEE;
+}
+
+#home-button-holder .button:hover
+{
+    background-color: #DDDDDD;
+}
+
+#home-button-holder .button:active
+{
+    background-color: #CCCCCC;
+}
