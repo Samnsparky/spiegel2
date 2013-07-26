@@ -2,11 +2,18 @@
     "name": "select_data",
     "view": "select_data.html",
     "styles": ["select_data.css"],
-    "scripts": [],
+    "scripts": ["select_data.js"],
     "context": {
         "formats": [
-            {"name": "csv", "humanName": "CSV files", "default": true},
-            {"name": "sqlite", "humanName": "SQLite database"}
+            {
+                "name": "csv",
+                "humanName": "CSV files",
+                "default": true
+            },
+            {
+                "name": "mongodb",
+                "humanName": "MongoDB database"
+            }
         ]
     }
 }

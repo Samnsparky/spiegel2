@@ -7,3 +7,28 @@
 {
     min-width: 300px;
 }
+
+#hidden-file-browse
+{
+    display: hidden;
+}
+
+.section-title
+{
+    font-weight: bold;
+}
+
+.format-config-option
+{
+    margin: 10px 0 10px 0;
+}
+
+.format-config-option button
+{
+    margin-bottom: 10px;
+}
+
+.format-config-option input
+{
+    height: 30px;
+}

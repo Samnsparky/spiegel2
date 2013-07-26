@@ -312,14 +312,19 @@ function genericErrorHandler(error)
  *      css files to apply to the new template.
  * @param {Array} jsFiles An array of strings with the names of (internally
  *      located) JavaScript files to load.
- * @param {function} onError The function to call after rendring the template.
+ * @param {function} onSuc The function to call after rendring the template.
  *      This is only called if rendering was successful. May be null and should
- *      take no arguments.
+ *      take no arguments. Optional and defaults to null.
  * @param {function} onError The function to call if rendering the template was
- *      unsuccessful.
+ *      unsuccessful. Optional and defaults to genericErrorHandler.
 **/
 function renderTemplate(name, context, dest, cssFiles, jsFiles, onSuc, onErr)
 {
+    if(onSuc === undefined)
+        onSuc = null;
+    if(onErr === undefined)
+        onErr = exports.genericErrorHandler;
+
     var onRender = function (renderedHTML)
     {
         var cssHTML;
