@@ -18,88 +18,230 @@ var LATE_LOADED_CSS_TEMPLATE_STR = '<link href="{{ href }}" rel="stylesheet" ' +
 
 var LATE_LOADED_CSS_TEMPLATE = handlebars.compile(LATE_LOADED_CSS_TEMPLATE_STR);
 var LATE_LOADED_JS_TEMPLATE = handlebars.compile(LATE_LOADED_JS_TEMPLATE_STR);
+var OS_INDEP_SEP = '/';
 
 var STEP_HOLDER = '#content-holder';
 
 
-function StepManager(stepInfo)
+/**
+ * Statuful object that manages the progress of the user through the wizard.
+ *
+ * State machine / facade indicating which step the user is currently on, a
+ * statful Object that also provides access to the current step's information.
+ *
+ * @param {Array} stepInfo Array of String, each with the name of a step. This
+ *      Array should have steps in the order in which the user will complete
+ *      them.
+**/
+exports.StepManager = function(stepInfo)
 {
     this.currentStep = 0;
 
+    /**
+     * Indicate that the user has moved to the next step.
+     *
+     * @throws Error thrown if the user reaches an invalid step.
+    **/
     this.incrementStep = function()
     {
         this.currentStep++;
+        this.checkStep();
     };
 
+    /**
+     * Indicate that the user has moved backwards a single step.
+     *
+     * @throws Error thrown if the user reaches an invalid step.
+    **/
     this.decrementStep = function()
     {
         this.currentStep--;
-    }
+        this.checkStep();
+    };
 
+    /**
+     * Indicate that the user has gone to the given step.
+     *
+     * @param {Number} stepNum An integer indicating the index of the step that
+     *      the user has reached.
+     * @throws Error thrown if the user was moved to an invalid step.
+    **/
+    this.setStepByNumber = function(stepNum)
+    {
+        this.currentStep = stepNum;
+        this.checkStep();
+    };
+
+    /**
+     * Indicate that the user has gone to the given step.
+     *
+     * @param {String} stepName A String indicating the name of the step that
+     *      the user has gone to.
+     * @throws Error thrown if the user was moved to an invalid or unrecognized
+     *      step.
+    **/
+    this.setStepByName = function(stepName)
+    {
+        this.currentStep = stepInfo.indexOf(stepName);
+        this.checkStep();
+    };
+
+    /**
+     * Determines if the user has reached or passed the end of the wizard.
+     *
+     * @return {Boolean} true if the user has reached or passed the end of the
+     *      wizard and false otherwise.
+    **/
     this.reachedEnd = function()
     {
-        return this.currentStep >= stepInfo.length;
-    }
+        return this.currentStep >= (stepInfo.length-1);
+    };
 
+    /**
+     * Get information about the step that the user is currently on.
+     *
+     * @param {function} onSuccess The function to call after the current step's
+     *      information is loaded. Should take a single paramter: an Object
+     *      with step information.
+     * @param {function} onError The function to call if an error is encountered
+     *      while loading step information. However, null is passed if the user
+     *      has reached the end of the wizard or is on an invalid step.
+    **/
     this.getCurrentStep = function(onSuccess, onError)
     {
-        if(this.reachedEnd())
-            return null;
+        if(!this.onValidStep())
+            onSuccess(null);
 
         var stepName = stepInfo[this.currentStep];
-        fs_facade.getStepInfo(name, onSuccess, onError)
-    }
-}
+        fs_facade.getStepInfo(stepName, onSuccess, onError);
+    };
+
+    this.getCurrentStepName = function()
+    {
+        return stepInfo[this.currentStep];
+    };
+
+    /**
+     * Verify that the user is on a valid / recognized step.
+     *
+     * Verify that this state machine is in a valid state, namely that the user
+     * is reported to be on a valid and recognized step.
+     *
+     * @throws Error thrown if the user is on an invalid or unrecognized step.
+    **/
+    this.checkStep = function()
+    {
+        if(!this.onValidStep())
+        {
+            throw new Error(
+                'User reached invalid step (' + this.currentStep + ')'
+            );
+        }
+    };
+
+    /**
+     * Verify that the user is on a valid / recognized step.
+     *
+     * Verify that this state machine is in a valid state, namely that the user
+     * is reported to be on a valid and recognized step.
+     *
+     * @return {Boolean} true if on valid step and false otherwise
+    **/
+    this.onValidStep = function()
+    {
+        return this.currentStep >= 0 && this.currentStep < stepInfo.length;
+    };
+
+};
 var stepManager = null;
 
 
-function getStepManager(onSuccess, onError)
+/**
+ * Get a singleton with information about the wizard steps.
+ *
+ * @param {function} onSuccess Function to call after the step manager has been
+ *      loaded. Should take a single argument for the Object StepManager.
+ * @param {function} onError Function to call if an error is enountered while
+ *      loading the step manager.
+**/
+exports.getStepManager = function(onSuccess, onError)
 {
     if(stepManager === null)
     {
-        getLoadedStepsInfo(function(stepInfo){
-            onSuccess(new StepManager(stepInfo));
+        fs_facade.getLoadedStepsInfo(function(stepInfo){
+            stepManager = new exports.StepManager(stepInfo);
+            onSuccess(stepManager);
         }, onError);
     }
     else
     {
         onSuccess(stepManager);
     }
-}
+};
 
 
-function renderNextStep(context, onSuccess, onError)
+/**
+ * Render the next step in the wizard.
+ *
+ * @param {Object} context Object to render the step's handlebars template with.
+ * @param {function} onSuccess The function to call after the step is
+ *      successfully rendered. Should take no arguments and may be null.
+ * @param {function} onError The function to call if an error is encountered
+ *      during rendering.
+**/
+exports.renderNextStep = function(context, onSuccess, onError)
 {
     var onGetCurrentStep = function(currentStep)
     {
         if(currentStep === null)
             onError(new Error('Could not retrieve step information.'));
 
-        renderStep(currentStep, context, onSuccess, onError);
+        exports.renderStep(currentStep, context, onSuccess, onError);
     };
 
     var onGetStepManager = function(stepManager)
     {
-        stepManager.incrementStep();
-        
         if(stepManager.reachedEnd())
             onError(new Error('No more steps remaining.'));
+
+        stepManager.incrementStep();
         
         stepManager.getCurrentStep(onGetCurrentStep, onError);
     };
 
-    getStepManager(onGetStepManager, onError);
-}
+    exports.getStepManager(onGetStepManager, onError);
+};
 
 
-function renderStep(currentStep, context, onSuccess, onError)
+/**
+ * Render / display a step.
+ *
+ * @param {Object} step Object about the step. Should have a string view for
+ *      the name of the HTML file to render, array of string for the css files
+ *      to include, and an array of string for the JavaScript files to include.
+ * @param {Object} context Object with values to render the step's handlebars
+ *      template with.
+ * @param {function} onSuccess The function to call after the step is loaded.
+ *      Should take no arguments and may be null.
+ * @param {function} onError The function to call if an error is encountered
+ *      while rendering the step.
+**/
+exports.renderStep = function(step, context, onSuccess, onError)
 {
-    var name = step.view;
+    var name = step.name;
+    var view = name + OS_INDEP_SEP + step.view;
     var dest = STEP_HOLDER;
-    var cssFiles = step.styles;
-    var jsFiles = step.scripts;
-    renderTemplate(name, context, dest, cssFiles, jsFiles, onSuccess, onError);
-}
+    
+    var cssFiles = step.styles.map(function(style){
+        return name + OS_INDEP_SEP + style;
+    });
+    
+    var jsFiles = step.scripts.map(function(script){
+        return name + OS_INDEP_SEP + script;
+    });
+    
+    renderTemplate(view, context, dest, cssFiles, jsFiles, onSuccess, onError);
+};
 
 
 /**
@@ -107,7 +249,7 @@ function renderStep(currentStep, context, onSuccess, onError)
  *
  * @param {Error} error The error to re-throw.
 **/
-var genericErrorHandler = function(error)
+exports.genericErrorHandler = function(error)
 {
     throw error;
 };
@@ -126,7 +268,8 @@ var genericErrorHandler = function(error)
  * @param {Array} jsFiles An array of strings with the names of (internally
  *      located) JavaScript files to load.
  * @param {function} onError The function to call after rendring the template.
- *      This is only called if rendering was successful.
+ *      This is only called if rendering was successful. May be null and should
+ *      take no arguments.
  * @param {function} onError The function to call if rendering the template was
  *      unsuccessful.
 **/
@@ -179,7 +322,10 @@ function renderTemplate(name, context, dest, cssFiles, jsFiles, onSuc, onErr)
             $('head').append(jsHTML);
         });
 
-        $(dest).fadeIn();
+        $(dest).fadeIn(function(){
+            if(onSuc !== null)
+                onSuc();
+        });
     };
 
     var fileLoc;
