@@ -1,0 +1,26 @@
+<div id="select-data-step">
+    <div class="row-fluid">
+
+        <div class="span4 offset1">
+            <div>Type of database</div>
+            <div class="btn-toolbar">
+            <div class="btn-group" id="dataset-type-selection-controls">
+                <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+                    <span id="selected-dataset-type-display">
+                        {{#formats}}
+                            {{#default}}{{../humanName}}{{/default}}
+                        {{/formats}}
+                    </span>
+                    <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu">
+                    {{#formats}}
+                    <li><a class="dataset-type-selection-link" id="{{name}}-selector" href="#">{{humanName}}</a></li>
+                    {{/formats}}
+                </ul>
+            </div>
+            </div>
+        </div>
+
+    </div>
+</div>

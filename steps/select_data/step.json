@@ -1,6 +1,12 @@
 {
     "name": "select_data",
     "view": "select_data.html",
-    "styles": [],
-    "scripts": []
+    "styles": ["select_data.css"],
+    "scripts": [],
+    "context": {
+        "formats": [
+            {"name": "csv", "humanName": "CSV files", "default": true},
+            {"name": "sqlite", "humanName": "SQLite database"}
+        ]
+    }
 }

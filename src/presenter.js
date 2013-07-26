@@ -7,6 +7,7 @@
  * @author A. Samuel Pottinger (CU Boulder & Gleap LLC, 2013)
 **/
 
+var extend = require('node.extend');
 var handlebars = require('handlebars');
 
 var fs_facade = require('./fs_facade');
@@ -186,10 +187,12 @@ function getStepManager(onSuccess, onError)
  * Render the next step in the wizard.
  *
  * @param {Object} context Object to render the step's handlebars template with.
+ *      Optional and will default to empty dictionary.
  * @param {function} onSuccess The function to call after the step is
  *      successfully rendered. Should take no arguments and may be null.
+ *      Optional and will default to null.
  * @param {function} onError The function to call if an error is encountered
- *      during rendering.
+ *      during rendering. Optional and will default to genericErrorHandler.
 **/
 function renderNextStep(context, onSuccess, onError)
 {
@@ -210,6 +213,13 @@ function renderNextStep(context, onSuccess, onError)
         
         stepManager.getCurrentStep(onGetCurrentStep, onError);
     };
+
+    if(context === undefined)
+        context = {};
+    if(onSuccess === undefined)
+        onSuccess = null;
+    if(onError === undefined)
+        onError = exports.genericErrorHandler;
 
     exports.getStepManager(onGetStepManager, onError);
 }
@@ -272,6 +282,8 @@ function renderStep(step, context, onSuccess, onError)
     var jsFiles = step.scripts.map(function(script){
         return name + OS_INDEP_SEP + script;
     });
+
+    context = extend(context, step.context);
     
     renderTemplate(view, context, dest, cssFiles, jsFiles, onSuccess, onError);
 }
